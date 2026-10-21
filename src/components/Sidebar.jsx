@@ -1,0 +1,70 @@
+import { translations } from '../translations';
+
+export default function Sidebar({ 
+  activePage, 
+  setActivePage, 
+  pendingCount = 0,
+  isMobileOpen,
+  closeMobileMenu,
+  language = 'en'
+}) {
+  const t = translations[language] || translations.en;
+
+  const menuItems = [
+    { id: 'home', label: t.navHome, icon: '🏡' },
+    { id: 'find-tractor', label: t.navFindTractor, icon: '🔍' },
+    { id: 'booking-form', label: t.navBookingTractor, icon: '📋' },
+    { id: 'owner-registration', label: t.navOwnerRegistration, icon: '🚜' },
+    { id: 'owner-inbox', label: t.navOwnerInbox, icon: '📥', badge: pendingCount > 0 ? pendingCount : null },
+    { id: 'my-bookings', label: t.navMyBooking, icon: '📄' },
+    { id: 'admin-dashboard', label: t.navAdminDashboard, icon: '🛡️' },
+  ];
+
+  const handleNavClick = (id) => {
+    setActivePage(id);
+    if (closeMobileMenu) {
+      closeMobileMenu();
+    }
+  };
+
+  return (
+    <>
+      <div 
+        className={`sidebar-overlay ${isMobileOpen ? 'open' : ''}`} 
+        onClick={closeMobileMenu}
+      />
+      <aside className={`app-sidebar ${isMobileOpen ? 'open' : ''}`}>
+        <div className="sidebar-brand">
+          <span className="brand-icon">🌾</span>
+          <div className="brand-text">
+            <h1>{t.brandName}</h1>
+            <small>{t.brandSubtitle}</small>
+          </div>
+        </div>
+
+        <nav className="sidebar-nav">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              className={`nav-link ${activePage === item.id ? 'active' : ''}`}
+              onClick={() => handleNavClick(item.id)}
+            >
+              <div className="nav-link-content">
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </div>
+              {item.badge && <span className="nav-badge">{item.badge}</span>}
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="helpline-box">
+            <strong>{t.villageHelpline}</strong>
+            <span>{t.helplineText}</span>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+}
