@@ -3,6 +3,7 @@ import './App.css';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import ReceiptModal from './components/ReceiptModal';
+import LocationModal from './components/LocationModal';
 import Home from './pages/Home';
 import FindTractor from './pages/FindTractor';
 import TractorBooking from './pages/TractorBooking';
@@ -11,6 +12,8 @@ import OwnerInbox from './pages/OwnerInbox';
 import MyBookings from './pages/MyBookings';
 import Dashboard from './pages/Dashboard';
 import AdminLogin from './pages/AdminLogin';
+import { DEFAULT_LOCATION } from './data/telanganaLocations';
+import { fetchRegionWeather, getFallbackWeather } from './services/weatherService';
 
 const DEFAULT_TRACTORS = [
   {
@@ -18,6 +21,7 @@ const DEFAULT_TRACTORS = [
     owner: "Ramesh Kumar",
     mobile: "9876543210",
     location: "Hasanparthy",
+    district: "Hanumakonda",
     brand: "Mahindra",
     model: "475 DI XP Plus (44 HP)",
     equipment: "Ploughing, Rotavator, Cultivator",
@@ -32,6 +36,7 @@ const DEFAULT_TRACTORS = [
     owner: "Sailu Yadav",
     mobile: "9032004060",
     location: "Bheemaram",
+    district: "Hanumakonda",
     brand: "Mahindra",
     model: "575 DI Sarpanch (47 HP)",
     equipment: "Ploughing, Cultivator, Trailer Services",
@@ -46,6 +51,7 @@ const DEFAULT_TRACTORS = [
     owner: "Rajesh Goud",
     mobile: "9440123456",
     location: "Velair",
+    district: "Hanumakonda",
     brand: "John Deere",
     model: "5075E 4WD (75 HP Heavy)",
     equipment: "Ploughing, Rotavator, Heavy Tillage, Laser Leveler",
@@ -60,6 +66,7 @@ const DEFAULT_TRACTORS = [
     owner: "Mallesh Reddy",
     mobile: "9123456780",
     location: "Dharmasagar",
+    district: "Hanumakonda",
     brand: "Swaraj",
     model: "744 FE XT (48 HP)",
     equipment: "Rotavator, Cultivator, Trailer Services",
@@ -74,6 +81,7 @@ const DEFAULT_TRACTORS = [
     owner: "Kishan Rao",
     mobile: "9849123450",
     location: "Kazipet",
+    district: "Hanumakonda",
     brand: "Massey Ferguson",
     model: "241 DI Maha Shakti (42 HP)",
     equipment: "Ploughing, Disc Harrow, Cultivator",
@@ -87,7 +95,8 @@ const DEFAULT_TRACTORS = [
     id: 6,
     owner: "Srinivas Chary",
     mobile: "9908123456",
-    location: "Ananthasagar",
+    location: "Gajwel",
+    district: "Siddipet",
     brand: "Sonalika",
     model: "DI 745 III Sikander (50 HP)",
     equipment: "Rotavator, Heavy Tillage, Cultivator",
@@ -102,6 +111,7 @@ const DEFAULT_TRACTORS = [
     owner: "Thirupathi Goud",
     mobile: "9701123456",
     location: "Hasanparthy",
+    district: "Hanumakonda",
     brand: "Kubota",
     model: "MU4501 4WD (Paddy Specialist)",
     equipment: "Cage Wheels Puddling, Rotavator, Wet Land Ploughing",
@@ -115,7 +125,8 @@ const DEFAULT_TRACTORS = [
     id: 8,
     owner: "Prabhakar Reddy",
     mobile: "9490123789",
-    location: "Hanamkonda",
+    location: "Narsampet",
+    district: "Warangal",
     brand: "New Holland",
     model: "3630 TX Super Plus (55 HP)",
     equipment: "Deep Ploughing, Cultivator, Trolley Hauling",
@@ -129,7 +140,8 @@ const DEFAULT_TRACTORS = [
     id: 9,
     owner: "Devender Varma",
     mobile: "9866123456",
-    location: "Elkathurthy",
+    location: "Armoor",
+    district: "Nizamabad",
     brand: "Eicher",
     model: "380 Super DI (40 HP Economical)",
     equipment: "Ploughing, Cultivator, Ridger / Bund Maker",
@@ -143,7 +155,8 @@ const DEFAULT_TRACTORS = [
     id: 10,
     owner: "Bikshapathi Nayak",
     mobile: "9949123456",
-    location: "Madikonda",
+    location: "Miryalaguda",
+    district: "Nalgonda",
     brand: "Farmtrac",
     model: "60 Powermaxx (55 HP)",
     equipment: "Ploughing, Rotavator, Trailer Services, Heavy Haulage",
@@ -157,7 +170,8 @@ const DEFAULT_TRACTORS = [
     id: 11,
     owner: "Anjaiah Yadav",
     mobile: "9848556677",
-    location: "Bheemaram",
+    location: "Huzurabad",
+    district: "Karimnagar",
     brand: "John Deere",
     model: "5310 GearPro (55 HP)",
     equipment: "Laser Leveling, Heavy Ploughing, Rotavator",
@@ -171,7 +185,8 @@ const DEFAULT_TRACTORS = [
     id: 12,
     owner: "Maheshwar Rao",
     mobile: "9000123987",
-    location: "Velair",
+    location: "Sathupally",
+    district: "Khammam",
     brand: "Mahindra",
     model: "Novo 655 DI 4WD (65 HP High Power)",
     equipment: "Subsoiler, Heavy Disc Harrow, Rotavator, Trailer Services",
@@ -180,6 +195,36 @@ const DEFAULT_TRACTORS = [
     photo: "/tractor2.jpeg",
     rating: 5.0,
     jobsDone: 51
+  },
+  {
+    id: 13,
+    owner: "Venkataiah Goud",
+    mobile: "9848112233",
+    location: "Jadcherla",
+    district: "Mahabubnagar",
+    brand: "Swaraj",
+    model: "855 FE (52 HP Heavy Duty)",
+    equipment: "Ploughing, Cultivator, Rotavator, Groundnut Digger",
+    pricing: 1350,
+    availability: "Available",
+    photo: "/tractor4.jpeg",
+    rating: 4.8,
+    jobsDone: 26
+  },
+  {
+    id: 14,
+    owner: "Ravi Shankar",
+    mobile: "9988776655",
+    location: "Kodad",
+    district: "Suryapet",
+    brand: "Mahindra",
+    model: "585 DI Power Plus (50 HP)",
+    equipment: "Ploughing, Trailer Services, Rotavator",
+    pricing: 1250,
+    availability: "Available",
+    photo: "/tractor1.jpeg",
+    rating: 4.9,
+    jobsDone: 33
   }
 ];
 
@@ -225,6 +270,7 @@ function App() {
   const [serviceFilter, setServiceFilter] = useState('All');
   const [selectedTractor, setSelectedTractor] = useState(null);
   const [receiptModalBooking, setReceiptModalBooking] = useState(null);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
   // Admin Login Authentication State with SessionStorage
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
@@ -260,15 +306,63 @@ function App() {
     }
   }, [language]);
 
-  // Load Tractors from LocalStorage or Fallback (auto-upgrades to full 12-fleet)
+  // Selected Location State (Telangana District & Village) with LocalStorage
+  const [selectedLocation, setSelectedLocation] = useState(() => {
+    try {
+      const saved = localStorage.getItem('agri_selected_location');
+      return saved ? JSON.parse(saved) : DEFAULT_LOCATION;
+    } catch {
+      return DEFAULT_LOCATION;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('agri_selected_location', JSON.stringify(selectedLocation));
+    } catch (e) {
+      console.error('Failed to save location to localStorage', e);
+    }
+  }, [selectedLocation]);
+
+  // Dynamic Weather Data State for Selected Region
+  const [weatherData, setWeatherData] = useState(() => getFallbackWeather(selectedLocation, language));
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    fetchRegionWeather(selectedLocation, language)
+      .then((data) => {
+        if (isMounted) {
+          setWeatherData(data);
+          setIsLoadingWeather(false);
+        }
+      })
+      .catch((err) => {
+        console.warn('Weather fetch error:', err);
+        if (isMounted) {
+          setIsLoadingWeather(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedLocation, language]);
+
+  const handleSelectLocation = (newLoc) => {
+    setIsLoadingWeather(true);
+    setSelectedLocation(newLoc);
+  };
+
+  // Load Tractors from LocalStorage or Fallback (auto-upgrades fleet)
   const [tractors, setTractors] = useState(() => {
     try {
       const saved = localStorage.getItem('agri_tractors');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.length < 12) {
-          // Merge user-created tractors with the complete 12 default tractors
-          const userCreated = parsed.filter(t => t.id > 12);
+        if (parsed.length < DEFAULT_TRACTORS.length) {
+          const userCreated = parsed.filter(t => t.id > 14);
           return [...DEFAULT_TRACTORS, ...userCreated];
         }
         return parsed;
@@ -329,6 +423,10 @@ function App() {
             setActivePage={setActivePage}
             setServiceFilter={setServiceFilter}
             language={language}
+            selectedLocation={selectedLocation}
+            weatherData={weatherData}
+            isLoadingWeather={isLoadingWeather}
+            onOpenLocationPicker={() => setIsLocationModalOpen(true)}
           />
         );
       case 'find-tractor':
@@ -340,6 +438,10 @@ function App() {
             serviceFilter={serviceFilter}
             setServiceFilter={setServiceFilter}
             language={language}
+            selectedLocation={selectedLocation}
+            weatherData={weatherData}
+            isLoadingWeather={isLoadingWeather}
+            onOpenLocationPicker={() => setIsLocationModalOpen(true)}
           />
         );
       case 'booking-form':
@@ -352,6 +454,7 @@ function App() {
             setActivePage={setActivePage}
             onBookingSuccess={(newB) => setReceiptModalBooking(newB)}
             language={language}
+            selectedLocation={selectedLocation}
           />
         );
       case 'owner-registration':
@@ -406,6 +509,10 @@ function App() {
             setActivePage={setActivePage}
             setServiceFilter={setServiceFilter}
             language={language}
+            selectedLocation={selectedLocation}
+            weatherData={weatherData}
+            isLoadingWeather={isLoadingWeather}
+            onOpenLocationPicker={() => setIsLocationModalOpen(true)}
           />
         );
     }
@@ -413,7 +520,7 @@ function App() {
 
   return (
     <div className="app-layout">
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation with Dynamic Local Regional Helpline */}
       <Sidebar
         activePage={activePage}
         setActivePage={setActivePage}
@@ -421,6 +528,7 @@ function App() {
         isMobileOpen={isMobileOpen}
         closeMobileMenu={() => setIsMobileOpen(false)}
         language={language}
+        selectedLocation={selectedLocation}
       />
 
       {/* Main Content Area */}
@@ -434,11 +542,22 @@ function App() {
           setLanguage={setLanguage}
           isAdminLoggedIn={isAdminLoggedIn}
           onAdminLogout={() => setIsAdminLoggedIn(false)}
+          selectedLocation={selectedLocation}
+          onOpenLocationPicker={() => setIsLocationModalOpen(true)}
         />
         <main className="page-container">
           {renderPage()}
         </main>
       </div>
+
+      {/* Interactive Telangana Region & Village Location Picker Modal */}
+      <LocationModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        currentLocation={selectedLocation}
+        onSelectLocation={handleSelectLocation}
+        language={language}
+      />
 
       {/* Digital Agricultural Work Slip / Receipt Modal */}
       {receiptModalBooking && (

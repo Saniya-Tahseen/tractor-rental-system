@@ -8,9 +8,12 @@ export default function Header({
   language = 'en',
   setLanguage,
   isAdminLoggedIn,
-  onAdminLogout
+  onAdminLogout,
+  selectedLocation,
+  onOpenLocationPicker
 }) {
   const t = translations[language] || translations.en;
+  const isTe = language === 'te';
 
   const getPageTitle = (page) => {
     switch (page) {
@@ -37,6 +40,10 @@ export default function Header({
     setLanguage((prev) => (prev === 'en' ? 'te' : 'en'));
   };
 
+  const displayLocation = selectedLocation
+    ? `${isTe ? (selectedLocation.villageTe || selectedLocation.village) : selectedLocation.village}, ${isTe ? (selectedLocation.districtTe || selectedLocation.district) : selectedLocation.district}`
+    : t.localityLabel;
+
   return (
     <header className="top-header">
       <div className="header-left">
@@ -53,11 +60,17 @@ export default function Header({
       </div>
 
       <div className="header-right">
-        {/* Locality Pill */}
-        <div className="locality-pill" title="Locality covered by our network">
-          <span>📍</span>
-          <span>{t.localityLabel}</span>
-        </div>
+        {/* Interactive Locality Selector Pill */}
+        <button
+          className="locality-pill-btn"
+          onClick={onOpenLocationPicker}
+          title={isTe ? "తెలంగాణ ప్రాంతం / గ్రామం మార్చండి" : "Click to select any village or district across Telangana"}
+          type="button"
+        >
+          <span className="pill-pin">📍</span>
+          <span className="pill-text">{displayLocation}</span>
+          <span className="pill-arrow">▾</span>
+        </button>
 
         {/* Language Switcher */}
         <button

@@ -6,9 +6,11 @@ export default function Sidebar({
   pendingCount = 0,
   isMobileOpen,
   closeMobileMenu,
-  language = 'en'
+  language = 'en',
+  selectedLocation
 }) {
   const t = translations[language] || translations.en;
+  const isTe = language === 'te';
 
   const menuItems = [
     { id: 'home', label: t.navHome, icon: '🏡' },
@@ -26,6 +28,12 @@ export default function Sidebar({
       closeMobileMenu();
     }
   };
+
+  const villageName = selectedLocation
+    ? (isTe ? (selectedLocation.villageTe || selectedLocation.village) : selectedLocation.village)
+    : 'Hasanparthy';
+  
+  const helplineNum = selectedLocation?.helpline || '9032004060';
 
   return (
     <>
@@ -60,8 +68,13 @@ export default function Sidebar({
 
         <div className="sidebar-footer">
           <div className="helpline-box">
-            <strong>{t.villageHelpline}</strong>
-            <span>{t.helplineText}</span>
+            <strong>{t.villageHelpline} ({villageName})</strong>
+            <span>{villageName}: {helplineNum} | Toll-Free: 1800-425-1122</span>
+            {selectedLocation?.kvk && (
+              <small style={{ display: 'block', fontSize: '9.5px', color: '#a5d6a7', marginTop: '3px' }}>
+                🏛️ {selectedLocation.kvk}
+              </small>
+            )}
           </div>
         </div>
       </aside>

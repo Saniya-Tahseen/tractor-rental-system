@@ -8,10 +8,15 @@ export default function FindTractor({
   setSelectedTractor, 
   serviceFilter, 
   setServiceFilter,
-  language = 'en'
+  language = 'en',
+  selectedLocation,
+  weatherData,
+  isLoadingWeather,
+  onOpenLocationPicker
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('recommended');
+  const [onlyLocalFleet, setOnlyLocalFleet] = useState(false);
 
   const t = translations[language] || translations.en;
   const isTe = language === 'te';
@@ -24,7 +29,10 @@ export default function FindTractor({
     { id: 'Trailer Services', label: isTe ? 'ట్రాలీ రవాణా' : 'Trailer Services' },
   ];
 
-  // Filter tractors based on search query and selected service
+  const activeVillage = selectedLocation?.village || 'Hasanparthy';
+  const activeDistrict = selectedLocation?.district || 'Hanumakonda';
+
+  // Filter tractors based on search query, selected service, and regional fleet
   const filteredTractors = tractors.filter((tractor) => {
     const matchesSearch = 
       (tractor.model || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -37,7 +45,11 @@ export default function FindTractor({
       serviceFilter === 'All' || 
       (tractor.equipment && tractor.equipment.toLowerCase().includes(serviceFilter.toLowerCase()));
 
-    return matchesSearch && matchesService;
+    const matchesLocal = !onlyLocalFleet ||
+      (tractor.location || '').toLowerCase().includes(activeVillage.toLowerCase()) ||
+      (tractor.location || '').toLowerCase().includes(activeDistrict.toLowerCase());
+
+    return matchesSearch && matchesService && matchesLocal;
   });
 
   // Sort tractors
@@ -71,7 +83,42 @@ export default function FindTractor({
   return (
     <div className="page-anim">
       {/* Agricultural Weather & Soil Advisory Widget */}
-      <WeatherBar language={language} />
+      <WeatherBar 
+        language={language}
+        selectedLocation={selectedLocation}
+        weatherData={weatherData}
+        isLoadingWeather={isLoadingWeather}
+        onOpenLocationPicker={onOpenLocationPicker}
+      />
+
+      {/* Locality Fleet Banner */}
+      <div className="locality-fleet-banner">
+        <div>
+          <span>📍 {isTe ? 'ఎంచుకున్న ప్రాంతం:' : 'Active Location:'} </span>
+          <strong>
+            {isTe ? (selectedLocation?.villageTe || activeVillage) : activeVillage},{' '}
+            {isTe ? (selectedLocation?.districtTe || activeDistrict) : activeDistrict}
+          </strong>
+        </div>
+        <div className="locality-fleet-actions">
+          <button
+            className={`filter-local-toggle-btn ${onlyLocalFleet ? 'active' : ''}`}
+            onClick={() => setOnlyLocalFleet(prev => !prev)}
+            title={isTe ? 'ఈ గ్రామం/జిల్లాలోని ట్రాక్టర్లను మాత్రమే చూపించు' : 'Filter tractors located in this locality/district only'}
+          >
+            {onlyLocalFleet 
+              ? (isTe ? '✓ స్థానిక ఫ్లీట్ మాత్రమే' : '✓ Local Fleet Only')
+              : (isTe ? '🌾 స్థానిక ట్రాక్టర్లు ఫిల్టర్' : '🌾 Filter Local Only')}
+          </button>
+          <button
+            className="filter-local-toggle-btn"
+            style={{ background: '#f8fafc', borderColor: '#cbd5e1', color: '#334155' }}
+            onClick={onOpenLocationPicker}
+          >
+            {isTe ? 'ప్రాంతం మార్చండి ▾' : 'Change Locality ▾'}
+          </button>
+        </div>
+      </div>
 
       <div className="find-tractor-header">
         <div className="search-filter-bar">
@@ -79,7 +126,7 @@ export default function FindTractor({
             <span className="search-icon">🔍</span>
             <input 
               type="text" 
-              placeholder={t.searchPlaceholder}
+              placeholder={isTe ? "గ్రామం (ఉదా: హసన్‌పర్తి, గజ్వేల్), బ్రాండ్ లేదా మోడల్ ద్వారా వెతకండి..." : t.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -113,103 +160,99 @@ export default function FindTractor({
       {sortedTractors.length === 0 ? (
         <div className="form-card-wrapper text-center" style={{ padding: '50px 20px' }}>
           <p style={{ fontSize: '48px', marginBottom: '10px' }}>🌾</p>
-          <h4>{isTe ? `ఫలితాలు దొరకలేదు: "${searchQuery || serviceFilter}"` : `No tractors matching "${searchQuery || serviceFilter}"`}</h4>
+          <h4>{isTe ? `ఫలితాలు దొరకలేదు: "${searchQuery || serviceFilter || activeVillage}"` : `No tractors matching "${searchQuery || serviceFilter || activeVillage}"`}</h4>
           <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>
-            {isTe ? 'దయచేసి వేరే గ్రామం పేరు లేదా వేరే సర్వీస్ ఎంచుకోండి.' : 'Try clearing filters or search by another village name.'}
+            {isTe ? 'స్థానిక ఫిల్టర్ తీసివేసి లేదా వేరే గ్రామం పేరుతో వెతకండి.' : 'Try disabling "Local Fleet Only" or search by another village name.'}
           </p>
-          <button 
-            className="btn btn-primary" 
-            style={{ marginTop: '16px' }}
-            onClick={() => { setSearchQuery(''); setServiceFilter('All'); }}
-          >
-            {isTe ? 'అన్ని ట్రాక్టర్లు చూపించు' : 'Show All Fleet Units'}
-          </button>
+          <div style={{ marginTop: '14px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            {onlyLocalFleet && (
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setOnlyLocalFleet(false)}
+              >
+                🌐 {isTe ? 'అన్ని తెలంగాణ ట్రాక్టర్లను చూపించు' : 'Show All Telangana Fleet'}
+              </button>
+            )}
+            <button 
+              className="btn btn-secondary" 
+              onClick={() => { setSearchQuery(''); setServiceFilter('All'); setOnlyLocalFleet(false); }}
+            >
+              🔄 {isTe ? 'ఫిల్టర్లు రీసెట్ చేయండి' : 'Reset Filters'}
+            </button>
+          </div>
         </div>
       ) : (
         <div className="tractor-grid">
-          {sortedTractors.map((tractor) => {
-            const isAvailable = tractor.availability === 'Available';
-            const rating = tractor.rating || 4.8;
-            const jobsDone = tractor.jobsDone || (tractor.id * 7 + 12);
-            
-            return (
-              <div key={tractor.id} className="tractor-card">
-                <div className="tractor-image-wrap">
-                  <img 
-                    src={tractor.photo || '/tractor1.jpeg'} 
-                    alt={`${tractor.brand} ${tractor.model}`} 
-                    className="tractor-card-image"
-                    onError={(e) => {
-                      e.target.src = '/tractor1.jpeg';
-                    }}
-                  />
-                  <span className="brand-badge">{tractor.brand}</span>
-                  <span className="rating-badge">★ {rating} ({jobsDone} {isTe ? 'పనులు' : 'Jobs'})</span>
-                  <span className={`availability-tag ${isAvailable ? 'bg-success' : 'bg-warning'}`}>
-                    ● {isAvailable ? t.available : (tractor.availability || t.busy)}
-                  </span>
+          {sortedTractors.map((tractor) => (
+            <div key={tractor.id} className="tractor-card">
+              <div className="tractor-image-box">
+                <img 
+                  src={tractor.photo} 
+                  alt={`${tractor.brand} ${tractor.model}`}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/tractor1.jpeg';
+                  }}
+                />
+                <span className={`status-badge ${(tractor.availability || 'Available').toLowerCase() === 'available' ? 'status-avail' : 'status-busy'}`}>
+                  ● {tractor.availability === 'Available' ? t.available : (tractor.availability || t.busy)}
+                </span>
+                <span className="price-tag">
+                  ₹{tractor.pricing} {t.perHour}
+                </span>
+              </div>
+
+              <div className="tractor-card-body">
+                <div className="tractor-title-row">
+                  <h4 className="tractor-brand-model">{tractor.brand} {tractor.model}</h4>
+                  <span className="rating-pill">⭐ {tractor.rating || 4.9}</span>
                 </div>
 
-                <div className="tractor-card-body">
-                  <div className="tractor-title-row">
-                    <h4>{tractor.model}</h4>
-                    <div className="tractor-pricing">
-                      ₹{tractor.pricing} <small>{t.perHour}</small>
-                    </div>
-                  </div>
+                <div className="locality-badge-row">
+                  <span className="tractor-location-pill">📍 {tractor.location}</span>
+                  <span className="verified-badge">✓ {t.verifiedBadge}</span>
+                </div>
 
-                  <div className="tractor-location">
-                    <span>📍</span>
-                    <span>{tractor.location}</span>
-                    <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#2e7d32', fontWeight: 700 }}>
-                      ✓ {t.verifiedBadge}
-                    </span>
-                  </div>
+                <div className="equipment-tags-container">
+                  <small className="equip-label">{t.equippedTools}:</small>
+                  <p className="equipment-text">{tractor.equipment}</p>
+                </div>
 
-                  <div className="tractor-equipment-list">
-                    <small>{t.equippedTools}</small>
-                    <div className="equipment-tags">
-                      {(tractor.equipment || 'Ploughing').split(',').map((eq, i) => (
-                        <span key={i} className="equip-tag">
-                          {eq.trim()}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="owner-info-strip">
+                <div className="owner-profile-strip">
+                  <div className="owner-name-group">
+                    <span className="owner-avatar">👤</span>
                     <div>
-                      <span className="owner-name">👤 {tractor.owner}</span>
-                      <div className="owner-phone">📞 {tractor.mobile}</div>
+                      <strong>{tractor.owner}</strong>
+                      <small className="jobs-count"> ({tractor.jobsDone || 20}+ {isTe ? 'పనులు పూర్తి' : 'jobs done'})</small>
                     </div>
                   </div>
+                </div>
 
-                  <div className="tractor-card-actions">
-                    <button 
-                      className="btn btn-primary w-100" 
-                      onClick={() => handleBookTractor(tractor)}
-                    >
-                      {t.bookThisTractor}
-                    </button>
-                    <a 
-                      href={`tel:${tractor.mobile}`} 
-                      className="btn btn-call" 
-                      title={t.callOwner}
-                    >
-                      📞
-                    </a>
-                    <button 
-                      className="btn btn-whatsapp" 
-                      onClick={() => handleWhatsApp(tractor)}
-                      title={t.whatsappOwner}
-                    >
-                      💬
-                    </button>
-                  </div>
+                <div className="tractor-card-actions">
+                  <button 
+                    className="btn btn-primary btn-book"
+                    onClick={() => handleBookTractor(tractor)}
+                  >
+                    📋 {t.bookThisTractor}
+                  </button>
+                  <a 
+                    href={`tel:${tractor.mobile}`} 
+                    className="btn btn-call" 
+                    title={`Call Owner: ${tractor.mobile}`}
+                  >
+                    📞 {t.callOwner}
+                  </a>
+                  <button 
+                    className="btn btn-whatsapp" 
+                    onClick={() => handleWhatsApp(tractor)}
+                    title="Send WhatsApp Inquiry"
+                  >
+                    💬 {t.whatsappOwner}
+                  </button>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
     </div>

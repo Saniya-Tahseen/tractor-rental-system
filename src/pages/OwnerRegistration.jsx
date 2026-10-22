@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { translations } from '../translations';
+import { ALL_LOCATIONS_LIST } from '../data/telanganaLocations';
 
 export default function OwnerRegistration({ setTractors, setActivePage, language = 'en' }) {
   const t = translations[language] || translations.en;
@@ -177,10 +178,16 @@ export default function OwnerRegistration({ setTractors, setActivePage, language
               id="ownerLocation"
               type="text"
               required
-              placeholder={isTe ? "ఉదా: హసన్‌పర్తి, వరంగల్ రూరల్" : "e.g. Hasanparthy, Warangal"}
+              list="telangana-villages-owner-list"
+              placeholder={isTe ? "ఉదా: హసన్‌పర్తి, గజ్వేల్, ఆర్మూర్..." : "e.g. Hasanparthy, Gajwel, Armoor..."}
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
             />
+            <datalist id="telangana-villages-owner-list">
+              {ALL_LOCATIONS_LIST.slice(0, 150).map((loc, i) => (
+                <option key={i} value={`${isTe ? (loc.villageTe || loc.village) : loc.village}, ${isTe ? (loc.districtTe || loc.district) : loc.district}`} />
+              ))}
+            </datalist>
           </div>
         </div>
 

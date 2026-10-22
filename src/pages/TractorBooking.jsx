@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { translations } from '../translations';
+import { ALL_LOCATIONS_LIST } from '../data/telanganaLocations';
 
 const TODAY_DATE = new Date().toISOString().split('T')[0];
 
@@ -10,15 +11,20 @@ export default function TractorBooking({
   setBookings,
   setActivePage,
   onBookingSuccess,
-  language = 'en'
+  language = 'en',
+  selectedLocation
 }) {
   const t = translations[language] || translations.en;
   const isTe = language === 'te';
 
+  const defaultVillage = selectedLocation
+    ? `${isTe ? (selectedLocation.villageTe || selectedLocation.village) : selectedLocation.village}, ${isTe ? (selectedLocation.districtTe || selectedLocation.district) : selectedLocation.district}`
+    : '';
+
   const [formData, setFormData] = useState(() => ({
     farmerName: '',
     farmerMobile: '',
-    farmerVillage: '',
+    farmerVillage: defaultVillage,
     workType: 'Ploughing',
     otherWorkDetails: '',
     landArea: 2,
@@ -176,15 +182,32 @@ export default function TractorBooking({
           </div>
 
           <div className="form-group">
-            <label htmlFor="farmerVillage">{t.villageLocationLabel}</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label htmlFor="farmerVillage" style={{ margin: 0 }}>{t.villageLocationLabel}</label>
+              {defaultVillage && (
+                <button
+                  type="button"
+                  style={{ background: 'none', border: 'none', color: '#2e7d32', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                  onClick={() => setFormData({ ...formData, farmerVillage: defaultVillage })}
+                >
+                  📍 {isTe ? 'ప్రస్తుత ప్రాంతాన్ని వాడండి' : 'Use Active Location'}
+                </button>
+              )}
+            </div>
             <input
               id="farmerVillage"
               type="text"
               required
-              placeholder={isTe ? "ఉదా: హసన్‌పర్తి, వేలేరు" : "e.g. Hasanparthy, Velair"}
+              list="telangana-villages-list"
+              placeholder={isTe ? "ఉదా: హసన్‌పర్తి, గజ్వేల్, ఆర్మూర్..." : "e.g. Hasanparthy, Gajwel, Armoor..."}
               value={formData.farmerVillage}
               onChange={(e) => setFormData({ ...formData, farmerVillage: e.target.value })}
             />
+            <datalist id="telangana-villages-list">
+              {ALL_LOCATIONS_LIST.slice(0, 150).map((loc, i) => (
+                <option key={i} value={`${isTe ? (loc.villageTe || loc.village) : loc.village}, ${isTe ? (loc.districtTe || loc.district) : loc.district}`} />
+              ))}
+            </datalist>
           </div>
         </div>
 

@@ -1,7 +1,15 @@
 import WeatherBar from '../components/WeatherBar';
 import { translations } from '../translations';
 
-export default function Home({ setActivePage, setServiceFilter, language = 'en' }) {
+export default function Home({
+  setActivePage,
+  setServiceFilter,
+  language = 'en',
+  selectedLocation,
+  weatherData,
+  isLoadingWeather,
+  onOpenLocationPicker
+}) {
   const t = translations[language] || translations.en;
   const isTe = language === 'te';
 
@@ -54,7 +62,13 @@ export default function Home({ setActivePage, setServiceFilter, language = 'en' 
   return (
     <div className="home-view page-anim">
       {/* Agricultural Weather & Soil Advisory Widget */}
-      <WeatherBar language={language} />
+      <WeatherBar
+        language={language}
+        selectedLocation={selectedLocation}
+        weatherData={weatherData}
+        isLoadingWeather={isLoadingWeather}
+        onOpenLocationPicker={onOpenLocationPicker}
+      />
 
       {/* Hero Banner */}
       <div className="hero-banner">
